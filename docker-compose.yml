@@ -12,6 +12,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    env_file: docker-dev.env
     depends_on:
       - 'postgres'
       - 'static'
@@ -23,14 +24,18 @@ services:
 
   math:
     container_name: polis-math
+    env_file: docker-dev.env
     depends_on:
       - 'postgres'
+    networks:
+      - 'polis-dev'
     build:
-      context: https://github.com/pol-is/polisMath.git
+      context: https://github.com/rohanrichards/polisMath.git
 
 
   postgres:
     container_name: polis-db
+    env_file: docker-dev.env
     restart: always
     build:
       context: .
@@ -42,13 +47,44 @@ services:
       - 'postgres:/var/lib/postgresql/data'
 
 
+  clientparticipation:
+    container_name: client-participation
+    env_file: docker-dev.env
+    depends_on:
+      - 'postgres'
+    networks:
+      - 'polis-dev'
+    build:
+      context: https://github.com/rohanrichards/polisClientParticipation.git
+    volumes:
+      - 'client:/dist'
+
+
+  clientadmin:
+    container_name: client-admin
+    env_file: docker-dev.env
+    depends_on:
+      - 'postgres'
+    networks:
+      - 'polis-dev'
+    build:
+      context: https://github.com/rohanrichards/polisClientAdmin.git
+    volumes:
+      - 'admin:/dist'
+
+
   static:
     container_name: polis-static
+    env_file: docker-dev.env
     image: nginx:1.14
+    depends_on:
+      - 'clientparticipation'
     networks:
       - 'polis-dev'
     ports:
       - '5002:80'
+    volumes:
+      - 'admin:/usr/share/nginx/html'
 
 
 
@@ -58,4 +94,5 @@ networks:
 volumes:
   backups:
   postgres:
-
+  client:
+  admin:
